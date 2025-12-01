@@ -5,10 +5,10 @@
 replicaCount: 2
 
 image:
-  repository: nginx
+  repository: gambuzas/nginx-php-fpm
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
 
 nameOverride: ""
 fullnameOverride: ""
