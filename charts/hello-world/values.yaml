@@ -26,3 +26,9 @@ service:
   type: NodePort
   port: 80
   nodePort: 30080
+
+env:
+- name: MY_ENV_VARIABLE
+  value: "ZEDEDA"
+- name: MY_DEVICE_NAME
+  value: "ss-zks-cluster1"
