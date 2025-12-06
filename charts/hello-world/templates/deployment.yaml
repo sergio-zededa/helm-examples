@@ -21,6 +21,10 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           env:
+            - name: MY_DEVICE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             {{- range .Values.env }}
             - name: {{ .name }}
               value: {{ .value | quote }}
