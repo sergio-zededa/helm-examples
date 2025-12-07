@@ -29,6 +29,6 @@ service:
 
 env:
 - name: MY_ENV_VARIABLE
-  value: "ZEDEDA"
+  value: "Shell"
 #- name: MY_DEVICE_NAME
 #  value: "ss-zks-cluster1"
