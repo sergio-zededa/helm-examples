@@ -1,11 +1,11 @@
 {{- if .Values.hooks.preUpgrade.enabled }}
 # ── Pre-upgrade hook: Job ─────────────────────────────────────────────────────
-# Deletes the inference and webfrontend Deployments before each helm upgrade
-# so Kubernetes can recreate them with updated (immutable) spec.selector fields.
+# Deletes the inference Deployment before each upgrade so Kubernetes can
+# recreate it cleanly (spec.selector is immutable once set).
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "train-detection.fullname" . }}-pre-upgrade
+  name: {{ include "train-detection.preupgrade.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "train-detection.labels" . | nindent 4 }}
@@ -17,7 +17,7 @@ spec:
   backoffLimit: 2
   template:
     spec:
-      serviceAccountName: {{ include "train-detection.fullname" . }}-hook
+      serviceAccountName: {{ include "train-detection.hook.name" . }}
       restartPolicy: Never
       containers:
         - name: delete-deployments

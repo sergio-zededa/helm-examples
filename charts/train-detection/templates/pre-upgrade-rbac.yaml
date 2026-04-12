@@ -1,11 +1,9 @@
 {{- if .Values.hooks.preUpgrade.enabled }}
 # ── Pre-upgrade hook: RBAC ────────────────────────────────────────────────────
-# Grants the hook Job permission to delete Deployments in the release namespace
-# so that immutable spec.selector conflicts are resolved automatically on upgrade.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "train-detection.fullname" . }}-hook
+  name: {{ include "train-detection.hook.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "train-detection.labels" . | nindent 4 }}
@@ -17,7 +15,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "train-detection.fullname" . }}-hook
+  name: {{ include "train-detection.hook.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "train-detection.labels" . | nindent 4 }}
@@ -33,7 +31,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "train-detection.fullname" . }}-hook
+  name: {{ include "train-detection.hook.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "train-detection.labels" . | nindent 4 }}
@@ -44,9 +42,9 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "train-detection.fullname" . }}-hook
+  name: {{ include "train-detection.hook.name" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "train-detection.fullname" . }}-hook
+    name: {{ include "train-detection.hook.name" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

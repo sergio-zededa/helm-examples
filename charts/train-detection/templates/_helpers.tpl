@@ -100,6 +100,22 @@ Derive ENABLE_PEOPLE_DETECTION from the chosen variant.
 {{- end }}
 
 {{/*
+Hook base name — used for ServiceAccount / Role / RoleBinding.
+Reserves 5 chars for the "-hook" suffix → base truncated to 58.
+*/}}
+{{- define "train-detection.hook.name" -}}
+{{- printf "%s-hook" (.Release.Name | trunc 58 | trimSuffix "-") }}
+{{- end }}
+
+{{/*
+Pre-upgrade Job name.
+Reserves 12 chars for the "-pre-upgrade" suffix → base truncated to 51.
+*/}}
+{{- define "train-detection.preupgrade.name" -}}
+{{- printf "%s-pre-upgrade" (.Release.Name | trunc 51 | trimSuffix "-") }}
+{{- end }}
+
+{{/*
 Internal WEBHOOK_URL — inference → webfrontend (cluster-internal DNS).
 */}}
 {{- define "train-detection.webhookUrl" -}}
