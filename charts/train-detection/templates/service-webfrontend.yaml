@@ -8,8 +8,7 @@ metadata:
 spec:
   type: {{ .Values.webfrontend.service.type }}
   selector:
-    {{- include "train-detection.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: webfrontend
+    {{- include "train-detection.webfrontend.selectorLabels" . | nindent 4 }}
   ports:
     - name: web
       protocol: TCP

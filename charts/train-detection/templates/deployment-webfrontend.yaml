@@ -9,12 +9,11 @@ spec:
   replicas: {{ .Values.webfrontend.replicaCount }}
   selector:
     matchLabels:
-      {{- include "train-detection.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: webfrontend
+      {{- include "train-detection.webfrontend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "train-detection.selectorLabels" . | nindent 8 }}
+        {{- include "train-detection.webfrontend.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: webfrontend
     spec:
       {{- with .Values.webfrontend.imagePullSecrets }}

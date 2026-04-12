@@ -49,10 +49,28 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels
+Shared selector labels (instance only — do NOT add component here).
 */}}
 {{- define "train-detection.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "train-detection.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Stable, component-specific selector labels for the inference Deployment.
+The component is baked into `app.kubernetes.io/name` so the selector never
+needs to change on upgrade (spec.selector is immutable in Kubernetes).
+*/}}
+{{- define "train-detection.inference.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "train-detection.name" . }}-inference
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Stable, component-specific selector labels for the webfrontend Deployment.
+*/}}
+{{- define "train-detection.webfrontend.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "train-detection.name" . }}-webfrontend
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 

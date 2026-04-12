@@ -9,12 +9,14 @@ spec:
   replicas: {{ .Values.inference.replicaCount }}
   selector:
     matchLabels:
-      {{- include "train-detection.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: inference
+      # Component-specific selector — stable across upgrades (spec.selector is immutable).
+      # app.kubernetes.io/component is intentionally NOT in the selector;
+      # it is baked into app.kubernetes.io/name via inference.selectorLabels.
+      {{- include "train-detection.inference.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "train-detection.selectorLabels" . | nindent 8 }}
+        {{- include "train-detection.inference.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: inference
         train-detection/variant: {{ .Values.inference.variant }}
     spec:
