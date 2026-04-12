@@ -18,17 +18,23 @@ Create a default fully qualified app name.
 {{- end }}
 
 {{/*
-Inference component full name
+Inference component full name.
+Built from .Release.Name only (not chart name) so the -inference suffix
+always fits within the 63-char Kubernetes name limit even with long release names.
+e.g.  release="ss-helm-ai-train-detection-charts-train-detection" (49 chars)
+      → "ss-helm-ai-train-detection-charts-train-detection-inference" (59 chars) ✓
 */}}
 {{- define "train-detection.inference.fullname" -}}
-{{- printf "%s-inference" (include "train-detection.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-inference" .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-Webfrontend component full name
+Webfrontend component full name.
+Same rationale as inference — release name only to guarantee uniqueness.
+e.g.  → "ss-helm-ai-train-detection-charts-train-detection-webfrontend" (61 chars) ✓
 */}}
 {{- define "train-detection.webfrontend.fullname" -}}
-{{- printf "%s-webfrontend" (include "train-detection.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-webfrontend" .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
