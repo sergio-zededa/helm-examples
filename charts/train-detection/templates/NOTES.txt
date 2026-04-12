@@ -1,0 +1,51 @@
+╔══════════════════════════════════════════════════════════════╗
+║         Train Detection Dashboard — {{ .Chart.Version }}             ║
+╚══════════════════════════════════════════════════════════════╝
+
+Inference variant : {{ .Values.inference.variant | upper }}
+People detection  : {{ include "train-detection.inference.enablePeople" . }}
+
+── Access ──────────────────────────────────────────────────────
+{{- if .Values.ingress.enabled }}
+
+  Dashboard : https://{{ .Values.ingress.host }}/alpr/alpr_dashboard.html
+
+{{- else if eq .Values.webfrontend.service.type "NodePort" }}
+
+  Get your node IP:
+    export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
+    # or for minikube/k3s:
+    export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')
+
+  Dashboard :  http://$NODE_IP:{{ .Values.webfrontend.service.webPort }}/alpr/alpr_dashboard.html
+  WebSocket :  ws://$NODE_IP:{{ .Values.webfrontend.service.webhookPort }}
+  Inference :  http://$NODE_IP:{{ .Values.inference.service.port }}/health
+
+{{- else }}
+
+  Port-forward for local access:
+    kubectl port-forward svc/{{ include "train-detection.webfrontend.fullname" . }} \
+      {{ .Values.webfrontend.service.webPort }}:{{ .Values.webfrontend.service.webPort }} \
+      {{ .Values.webfrontend.service.webhookPort }}:{{ .Values.webfrontend.service.webhookPort }} &
+    kubectl port-forward svc/{{ include "train-detection.inference.fullname" . }} \
+      {{ .Values.inference.service.port }}:{{ .Values.inference.service.port }} &
+
+  Dashboard :  http://localhost:{{ .Values.webfrontend.service.webPort }}/alpr/alpr_dashboard.html
+
+{{- end }}
+
+── Switching inference variant ──────────────────────────────────
+
+  Trains only (lighter, no YOLOv8n):
+    helm upgrade {{ .Release.Name }} ./train-detection \
+      --set inference.variant=trains
+
+  Trains + people (full):
+    helm upgrade {{ .Release.Name }} ./train-detection \
+      --set inference.variant=full
+
+── Status ──────────────────────────────────────────────────────
+
+  kubectl get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+  kubectl logs -l app.kubernetes.io/component=inference --tail=50
+  kubectl logs -l app.kubernetes.io/component=webfrontend --tail=50

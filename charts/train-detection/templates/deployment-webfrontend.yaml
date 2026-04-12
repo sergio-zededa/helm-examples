@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "train-detection.webfrontend.fullname" . }}
+  labels:
+    {{- include "train-detection.labels" . | nindent 4 }}
+    app.kubernetes.io/component: webfrontend
+spec:
+  replicas: {{ .Values.webfrontend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "train-detection.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: webfrontend
+  template:
+    metadata:
+      labels:
+        {{- include "train-detection.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: webfrontend
+    spec:
+      {{- with .Values.webfrontend.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: webfrontend
+          image: "{{ .Values.webfrontend.image.repository }}:{{ .Values.webfrontend.image.tag }}"
+          imagePullPolicy: {{ .Values.webfrontend.image.pullPolicy }}
+          ports:
+            - name: web
+              containerPort: {{ .Values.webfrontend.service.webPort }}
+              protocol: TCP
+            - name: webhook
+              containerPort: {{ .Values.webfrontend.service.webhookPort }}
+              protocol: TCP
+          env:
+            # nginx listen port — must match service.webPort
+            - name: WEB_PORT
+              value: {{ .Values.webfrontend.service.webPort | quote }}
+            # Node.js webhook + WebSocket listen port — must match service.webhookPort.
+            # inject-config.js also injects this as window.ENV_WEBHOOK_PORT so the
+            # browser WebSocket connects to the right port.
+            - name: WEBHOOK_PORT
+              value: {{ .Values.webfrontend.service.webhookPort | quote }}
+            # "auto" makes the browser use window.location.hostname
+            - name: BACKEND_HOST
+              value: "auto"
+            - name: ALPR_HOST
+              value: "auto"
+            # Browser uploads video here — must match inference service port
+            - name: ALPR_PORT
+              value: {{ .Values.inference.service.port | quote }}
+            - name: ALPR_ENDPOINT
+              value: "/process"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: web
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.webfrontend.resources | nindent 12 }}

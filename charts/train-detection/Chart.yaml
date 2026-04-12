@@ -1,0 +1,17 @@
+apiVersion: v2
+name: train-detection
+description: >
+  Real-time train operator classification (Renfe AVE / Iryo) and optional
+  people detection demo.  Two inference variants are available:
+    trains  — CNN + Tesseract OCR only (lighter image)
+    full    — CNN + Tesseract OCR + YOLOv8n person detection
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - ai
+  - inference
+  - train-detection
+  - yolo
+maintainers:
+  - name: ZEDEDA

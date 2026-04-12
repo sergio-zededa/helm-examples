@@ -1,0 +1,51 @@
+{{- if .Values.ingress.enabled -}}
+{{- $webSvc      := include "train-detection.webfrontend.fullname" . -}}
+{{- $webPort     := .Values.webfrontend.service.webPort | int -}}
+{{- $webhookPort := .Values.webfrontend.service.webhookPort | int -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "train-detection.fullname" . }}
+  labels:
+    {{- include "train-detection.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          # Main dashboard
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $webSvc }}
+                port:
+                  number: {{ $webPort }}
+          # WebSocket upgrade path — browsers connect here for live updates
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $webSvc }}
+                port:
+                  number: {{ $webhookPort }}
+          # Webhook path — inference container posts here
+          - path: /webhook
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $webSvc }}
+                port:
+                  number: {{ $webhookPort }}
+{{- end }}

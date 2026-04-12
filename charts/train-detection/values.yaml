@@ -1,0 +1,105 @@
+# ── train-detection Helm values ───────────────────────────────────────────────
+#
+# Port strategy (NodePort default)
+# ---------------------------------
+# Each component uses the SAME value for its container port and its NodePort.
+# This keeps the env vars that the browser receives (via inject-config.js)
+# consistent with the ports that are actually reachable on the node.
+#
+#   inference  : 30501
+#   webfrontend web (nginx)    : 30085
+#   webfrontend webhook / WS   : 30084
+#
+# All three are in the default NodePort range 30000-32767.
+#
+# For Ingress setups set service.type=ClusterIP and enable ingress below,
+# then change the ports back to conventional values (5000, 8084, 8085).
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ── Inference ──────────────────────────────────────────────────────────────────
+inference:
+  # Select which image to deploy:
+  #   "trains" → train-inference:trains  (CNN + OCR only, no ultralytics)
+  #   "full"   → train-inference:full    (CNN + OCR + YOLOv8n people detector)
+  variant: trains
+
+  image:
+    repository: gambuzas/inference
+    # tag defaults to the value of `variant` ("trains" or "full").
+    # Override here only if your registry uses a different tag scheme.
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  config:
+    modelPath:          /app/train_classifier_v3.pt
+    roiProfile:         maintenance_side_by_side
+    sendEveryNFrames:   "15"
+
+  service:
+    type: NodePort
+    # Container port = NodePort  (see port strategy note above)
+    port: 30501
+
+  resources:
+    requests:
+      cpu:    "500m"
+      memory: "512Mi"
+    limits:
+      cpu:    "2000m"
+      memory: "2Gi"
+
+  # Optional: pull secret for private registry
+  imagePullSecrets: []
+
+# ── Web Frontend ───────────────────────────────────────────────────────────────
+webfrontend:
+  image:
+    repository: gambuzas/webfrontend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  service:
+    type: NodePort
+    # nginx listen port = NodePort  (container and external port are the same)
+    webPort: 30085
+    # Node.js webhook + WebSocket port = NodePort
+    webhookPort: 30084
+
+  resources:
+    requests:
+      cpu:    "100m"
+      memory: "128Mi"
+    limits:
+      cpu:    "500m"
+      memory: "256Mi"
+
+  imagePullSecrets: []
+
+# ── Ingress (optional) ────────────────────────────────────────────────────────
+# Enable this for production deployments behind an ingress controller.
+# When ingress is enabled, set service.type=ClusterIP for both components
+# and use conventional container ports (8084, 8085, 5000).
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    # nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+    # nginx.ingress.kubernetes.io/configuration-snippet: |
+    #   proxy_set_header Upgrade $http_upgrade;
+    #   proxy_set_header Connection "upgrade";
+
+  # Dashboard hostname
+  host: train-detection.example.com
+
+  tls: []
+  #  - secretName: train-detection-tls
+  #    hosts:
+  #      - train-detection.example.com

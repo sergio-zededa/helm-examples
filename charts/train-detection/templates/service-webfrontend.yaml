@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "train-detection.webfrontend.fullname" . }}
+  labels:
+    {{- include "train-detection.labels" . | nindent 4 }}
+    app.kubernetes.io/component: webfrontend
+spec:
+  type: {{ .Values.webfrontend.service.type }}
+  selector:
+    {{- include "train-detection.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: webfrontend
+  ports:
+    - name: web
+      protocol: TCP
+      port: {{ .Values.webfrontend.service.webPort }}
+      targetPort: web
+      {{- if eq .Values.webfrontend.service.type "NodePort" }}
+      nodePort: {{ .Values.webfrontend.service.webPort }}
+      {{- end }}
+    - name: webhook
+      protocol: TCP
+      port: {{ .Values.webfrontend.service.webhookPort }}
+      targetPort: webhook
+      {{- if eq .Values.webfrontend.service.type "NodePort" }}
+      nodePort: {{ .Values.webfrontend.service.webhookPort }}
+      {{- end }}
