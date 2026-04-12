@@ -103,3 +103,12 @@ ingress:
   #  - secretName: train-detection-tls
   #    hosts:
   #      - train-detection.example.com
+
+# ── Upgrade hooks ─────────────────────────────────────────────────────────────
+# The pre-upgrade hook deletes the inference Deployment before each helm upgrade
+# so Kubernetes can recreate it cleanly (spec.selector is immutable once set).
+hooks:
+  preUpgrade:
+    enabled: true
+    # kubectl image used by the hook Job — must be reachable from the cluster
+    image: bitnami/kubectl:latest

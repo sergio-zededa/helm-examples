@@ -1,0 +1,35 @@
+{{- if .Values.hooks.preUpgrade.enabled }}
+# ── Pre-upgrade hook: Job ─────────────────────────────────────────────────────
+# Deletes the inference and webfrontend Deployments before each helm upgrade
+# so Kubernetes can recreate them with updated (immutable) spec.selector fields.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "train-detection.fullname" . }}-pre-upgrade
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "train-detection.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      serviceAccountName: {{ include "train-detection.fullname" . }}-hook
+      restartPolicy: Never
+      containers:
+        - name: delete-deployments
+          image: {{ .Values.hooks.preUpgrade.image | quote }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Deleting inference deployment..."
+              kubectl delete deployment \
+                {{ include "train-detection.inference.fullname" . }} \
+                --namespace {{ .Release.Namespace }} \
+                --ignore-not-found=true
+              echo "Done."
+{{- end }}

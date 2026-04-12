@@ -1,0 +1,52 @@
+{{- if .Values.hooks.preUpgrade.enabled }}
+# ── Pre-upgrade hook: RBAC ────────────────────────────────────────────────────
+# Grants the hook Job permission to delete Deployments in the release namespace
+# so that immutable spec.selector conflicts are resolved automatically on upgrade.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "train-detection.fullname" . }}-hook
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "train-detection.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-5"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "train-detection.fullname" . }}-hook
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "train-detection.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-5"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "train-detection.fullname" . }}-hook
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "train-detection.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-5"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "train-detection.fullname" . }}-hook
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "train-detection.fullname" . }}-hook
+    namespace: {{ .Release.Namespace }}
+{{- end }}
