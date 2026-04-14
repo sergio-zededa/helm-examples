@@ -23,7 +23,7 @@ inference:
   # Select which image to deploy:
   #   "trains" → train-inference:trains  (CNN + OCR only, no ultralytics)
   #   "full"   → train-inference:full    (CNN + OCR + YOLOv8n people detector)
-  variant: full
+  variant: train
 
   image:
     repository: gambuzas/inference
