@@ -105,12 +105,16 @@ ingress:
   #      - train-detection.example.com
 
 # ── Upgrade hooks ─────────────────────────────────────────────────────────────
-# The pre-upgrade hook deletes the inference Deployment before each helm upgrade
+# The pre-upgrade hook deletes the inference Deployment before a helm upgrade
 # so Kubernetes can recreate it cleanly (spec.selector is immutable once set).
+#
+# Enable ONLY when migrating from a chart version that had different selector
+# labels on the inference Deployment. For normal upgrades and fresh installs
+# leave this disabled — the hook races with Helm's resource apply on Rancher's
+# Helm operator and will delete the deployment before it can stabilize.
 hooks:
   preUpgrade:
-    enabled: true
-    # kubectl image used by the hook Job — must be reachable from the cluster.
+    enabled: false
     # rancher/kubectl is pre-cached on K3s/RKE2 nodes managed by Rancher Fleet.
     # On air-gapped edge nodes, mirror this image or override with a local copy.
     image: rancher/kubectl:v1.31.5
