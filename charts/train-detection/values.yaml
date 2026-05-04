@@ -23,7 +23,7 @@ inference:
   # Select which image to deploy:
   #   "trains" → train-inference:trains  (CNN + OCR only, no ultralytics)
   #   "full"   → train-inference:full    (CNN + OCR + YOLOv8n people detector)
-  variant: full
+  variant: trains
 
   image:
     repository: gambuzas/inference
@@ -110,5 +110,7 @@ ingress:
 hooks:
   preUpgrade:
     enabled: true
-    # kubectl image used by the hook Job — must be reachable from the cluster
-    image: bitnami/kubectl:latest
+    # kubectl image used by the hook Job — must be reachable from the cluster.
+    # rancher/kubectl is pre-cached on K3s/RKE2 nodes managed by Rancher Fleet.
+    # On air-gapped edge nodes, mirror this image or override with a local copy.
+    image: rancher/kubectl:v1.31.5
