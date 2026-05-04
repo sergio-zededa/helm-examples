@@ -23,13 +23,11 @@ spec:
         - name: delete-deployments
           image: {{ .Values.hooks.preUpgrade.image | quote }}
           command:
-            - /bin/sh
-            - -c
-            - |
-              echo "Deleting inference deployment..."
-              kubectl delete deployment \
-                {{ include "train-detection.inference.fullname" . }} \
-                --namespace {{ .Release.Namespace }} \
-                --ignore-not-found=true
-              echo "Done."
+            - kubectl
+            - delete
+            - deployment
+            - {{ include "train-detection.inference.fullname" . }}
+            - --namespace
+            - {{ .Release.Namespace }}
+            - --ignore-not-found=true
 {{- end }}
